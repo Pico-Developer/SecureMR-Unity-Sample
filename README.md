@@ -40,6 +40,9 @@ This repository contains Unity-based sample projects demonstrating SecureMR func
 4. **SecureMR Sample**
    - Scene: `Assets/Scenes/SecureMRSample.unity`
    - Showcases simple SecureMR features
+5. **UFO Demo**
+   - Scene: `Assets/Scenes/UFO.unity`
+   - Showcases end-to-end SecureMR functionality with face detection and depth estimation for rendering 3D objects in space
 
 ## Requirements
 
@@ -55,15 +58,10 @@ This repository contains Unity-based sample projects demonstrating SecureMR func
 4. Configure your XR device settings in the `Assets/XR/Settings` folder
 5. Run the scene
 
-## Build Outputs
-
-Pre-built APK files are available:
-- `color picker.apk`: Android build for the color picker demo
-- `mnistwild.apk`: Android build for the MNIST demo
-
 ## Additional Resources
 
 - 3D Models: Available in `Assets/Gltf/`
 - ML Models: MNIST model available in `Assets/MLModels/`
 
-        
+## How to update SecureMR SDK
+Please refer to https://developer.picoxr.com/document/unity/import-the-sdk/ for more details.
