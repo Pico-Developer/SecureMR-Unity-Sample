@@ -160,12 +160,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 165821379}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30046b4a8f91c4896a3ca15317ad627b, type: 3}
+  m_Script: {fileID: 11500000, guid: 0a466f970eec447c1889c5d09281705c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  faceModel: {fileID: 4900000, guid: a570e5f8582d0496e9f34bc4509d7db2, type: 3}
-  ufoGltfAsset: {fileID: 4900000, guid: 5ebec4b3b5ac149f7b2ccf92a8e48ce8, type: 3}
-  anchorMatrixAsset: {fileID: 4900000, guid: 2c68822fa1b30459388082c816a01614, type: 3}
+  faceModel: {fileID: 4900000, guid: e7c2fa93a7f80414d876036e1b6816f6, type: 3}
+  ufoGltfAsset: {fileID: 4900000, guid: f49b247cfb2e04dd784c0d037eae14e9, type: 3}
+  anchorMatrixAsset: {fileID: 4900000, guid: dd722839d27f44bfb9109bca7a7e7d70, type: 3}
   numFramesToRun: -1
   intervalBetweenPipelineRuns: 0.033
 --- !u!1 &928811618
