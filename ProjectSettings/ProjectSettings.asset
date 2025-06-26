@@ -818,8 +818,8 @@ PlayerSettings:
   webGLCloseOnQuit: 0
   webWasm2023: 0
   scriptingDefineSymbols:
-    Android: 
-    Standalone: 
+    Android: PICO_SPATIALIZER
+    Standalone: PICO_SPATIALIZER
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
