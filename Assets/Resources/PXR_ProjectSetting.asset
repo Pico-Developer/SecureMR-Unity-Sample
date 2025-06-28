@@ -29,12 +29,12 @@ MonoBehaviour:
   bodyTracking: 0
   adaptiveResolution: 0
   stageMode: 0
-  videoSeeThrough: 0
+  videoSeeThrough: 1
   spatialAnchor: 0
   sceneCapture: 0
   sharedAnchor: 0
   spatialMesh: 0
-  secureMR: 0
+  secureMR: 1
   meshLod: 0
   superResolution: 0
   normalSharpening: 0

@@ -150,6 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vstImageWidth: 1024
   vstImageHeight: 1024
+  globalTensors: []
+  pipelines: []
 --- !u!4 &197646222
 Transform:
   m_ObjectHideFlags: 0
@@ -194,7 +196,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84251656ddd66924395517d958477bba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  provider: {fileID: 197646221}
+  tensors: []
   operators:
   - {fileID: 0}
 --- !u!4 &437811835
@@ -1171,7 +1173,7 @@ MonoBehaviour:
   adaptiveResolution: 0
   eyeFoveationLevel: -1
   foveatedRenderingMode: 0
-  openMRC: 0
+  openMRC: 1
   foregroundLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1324,7 +1326,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   metadata: {fileID: 1800008439}
-  pipeline: {fileID: 437811834}
   tensorData: {fileID: 780404178}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
