@@ -16,7 +16,7 @@ MonoBehaviour:
   handTracking: 0
   adaptiveHand: 0
   highFrequencyHand: 0
-  openMRC: 0
+  openMRC: 1
   faceTracking: 0
   lipsyncTracking: 0
   eyeTracking: 0
@@ -49,3 +49,4 @@ MonoBehaviour:
   recommendMSAA: 0
   validationFFREnabled: 0
   validationETFREnabled: 0
+  portalInited: 1

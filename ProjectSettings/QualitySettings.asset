@@ -60,4 +60,6 @@ QualitySettings:
     excludedTargetPlatforms:
     - Standalone
   m_TextureMipmapLimitGroupNames: []
-  m_PerPlatformDefaultQuality: {}
+  m_PerPlatformDefaultQuality:
+    Android: 0
+    Standalone: 0
