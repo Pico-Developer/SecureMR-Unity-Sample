@@ -8,12 +8,15 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SecureMRSample.unity
     guid: 2d323328cc3b6473d8308b22e893eea9
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MnistwildDemo.unity
     guid: 3f835da6f99e7455b8489d915d4f197a
   - enabled: 0
     path: Assets/Scenes/ColorPickerDemo.unity
     guid: 6d3785010e8c44ffe8f7edef9d926844
+  - enabled: 1
+    path: Assets/Scenes/SecureMRMonobehavior.unity
+    guid: 3db4825f755494df2b680b14a43bb792
   m_configObjects:
     Unity.XR.PXR.Settings: {fileID: 11400000, guid: 9801a56ed26d34dc0936cb367ad2a8a5, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

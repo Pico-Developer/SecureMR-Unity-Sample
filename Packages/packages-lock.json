@@ -286,14 +286,15 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.picoxr": {
-      "version": "file:/Users/bytedance/Downloads/sdk",
+      "version": "https://github.com/Pico-Developer/PICO-Unity-Integration-SDK.git",
       "depth": 0,
-      "source": "local",
+      "source": "git",
       "dependencies": {
         "com.unity.xr.management": "4.0.0",
         "com.unity.xr.interaction.toolkit": "2.0.0",
         "com.unity.xr.core-utils": "2.3.0"
-      }
+      },
+      "hash": "8a80917b64c17efd575eb5a77a70556e38976a9b"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
