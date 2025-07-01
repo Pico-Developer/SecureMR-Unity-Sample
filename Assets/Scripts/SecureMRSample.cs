@@ -13,189 +13,109 @@
 // limitations under the License.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using Unity.VisualScripting;
-using UnityEngine;
 using Unity.XR.PXR;
 using Unity.XR.PXR.SecureMR;
+using UnityEngine;
 using Color = Unity.XR.PXR.SecureMR.Color;
 
-public class SecureMRSample : MonoBehaviour
+namespace PicoXR.SecureMR.Demo
 {
-    int image_width = 3248;   // Same as VST_IMAGE_WIDTH
-    int image_height = 2464;  // Same as VST_IMAGE_HEIGHT
-    int crop_x1 = 1444;
-    int crop_y1 = 1332;
-    int crop_x2 = 2045;
-    int crop_y2 = 1933;
-    int crop_width = 224;
-    int crop_height = 224;
-    
-    private Provider provider;
-    private Pipeline pipeline;
-    private Pipeline pipeline2;
-    
-    private Tensor debugGltf;
-    private Tensor debugGltfPlaceholder;
-    private Tensor debugGltfPlaceholder2;
-
-    public TextAsset tvGltf;
-    
-    // Start is called before the first frame update
-    void Awake()
+    public class SecureMRSample : MonoBehaviour
     {
-        PXR_Manager.EnableVideoSeeThrough = true;
-        //string filepath = Path.Combine(Application.persistentDataPath, "mnist_md5_48fe972.bin");
-        //byte[] fileBytes = File.ReadAllBytes(filepath);
+        public TextAsset helmetGltfAsset;
+        public int vstWidth = 1024;
+        public int vstHeight = 1024;
 
-        provider = new Provider(image_width, image_height);
-        //CreatePipeline();
-        CreateRender();
-    }
-    
-    void CreatePipeline()
-    {
-        //create provider and pipeline
-        pipeline2 = provider.CreatePipeline();
+        private Provider provider;
+        private Pipeline pipeline;
+        private Tensor gltfTensor;
+        private Tensor gltfPlaceholderTensor;
+        private void Awake()
+        {
+            PXR_Manager.EnableVideoSeeThrough = true;
+        }
 
-        //create operator
-        var vstAccessOp = pipeline2.CreateOperator<RectifiedVstAccessOperator>();
-        var getAffineOp = pipeline2.CreateOperator<GetAffineOperator>();
-        var applyAffineOp = pipeline2.CreateOperator<ApplyAffineOperator>();
+        private void Start()
+        {
+            CreateProvider();
+            CreateGlobals();
+            CreatePipeline();
+        }
 
-        //create tensor
-        var rawRgb = pipeline2.CreateTensor<byte,Matrix>(3, new TensorShape(image_height, image_width));
-        var cropRgbWrite = pipeline2.CreateTensorReference<byte,Matrix>(3, new TensorShape(crop_width, crop_height));
-        var cropRgbGlobal = provider.CreateTensor<byte,Matrix>(3, new TensorShape(crop_width, crop_height));
-        var affineMat = pipeline2.CreateTensor<float,Matrix>(1, new TensorShape(2,3));
-        var srcPoints  = pipeline2.CreateTensor<float,Point>(2, new TensorShape(3));
-        var dstPoints  = pipeline2.CreateTensor<float,Point>(2, new TensorShape(3));
-        
-        float[] srcPointsData = {crop_x1,crop_y1,crop_x2,crop_y1,crop_x2,crop_y2};
-        float[] dstPointsData = {0,0,crop_width,0,crop_width,crop_height};
-        
-        srcPoints.Reset(srcPointsData);
-        dstPoints.Reset(dstPointsData);
-        
-        //set operator input and output
-        vstAccessOp.SetResult("left image", rawRgb);
-        
-        getAffineOp.SetOperand("src",srcPoints);
-        getAffineOp.SetOperand("dst",dstPoints);
-        getAffineOp.SetResult("result",affineMat);
-        
-        applyAffineOp.SetOperand("affine",affineMat);
-        applyAffineOp.SetOperand("src image",rawRgb);
-        applyAffineOp.SetResult("dst image",cropRgbWrite);
+        private void Update()
+        {
+            RunPipeline();
+        }
 
-        var pipelineIOPair = pipeline2.CreateTensorMapping();
-        pipelineIOPair.Set(cropRgbWrite,cropRgbGlobal);
-        
-        
-        pipeline2.Execute(pipelineIOPair);
-    }
-    
-    void RunPipeline()
-    {
-        
-    }
+        private void CreateProvider()
+        {
+            provider = new Provider(vstWidth, vstHeight);
+        }
 
-    void CreateRender()
-    {
-        pipeline = provider.CreatePipeline();
+        private void CreateGlobals()
+        {
+            // Create GLTF tensor
+            gltfTensor = provider.CreateTensor<Gltf>(helmetGltfAsset.bytes);
 
-        RenderTextOperatorConfiguration renderTextConfiguration = new RenderTextOperatorConfiguration(SecureMRFontTypeface.SansSerif, "en-US", 1440, 960);
+        }
+
+        private void CreatePipeline()
+        {
+            pipeline = provider.CreatePipeline();
+
+            // Create transform matrix tensor
+            int[] transformDim = { 4, 4 };
+            var transformShape = new TensorShape(transformDim);
+            float[] transformData = {
+                0.5f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.5f, 0.0f, 0.25f,
+                0.0f, 0.0f, 0.5f, -1.5f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            };
+            var poseTensor = pipeline.CreateTensor<float, Matrix>(1, transformShape, transformData);
+
+            // Create GLTF tensor placeholder
+            gltfPlaceholderTensor = pipeline.CreateTensorReference<Gltf>();
+
+            // Create render GLTF operator
+            var renderGltfOperator = pipeline.CreateOperator<SwitchGltfRenderStatusOperator>();
+            renderGltfOperator.SetOperand("gltf", gltfPlaceholderTensor);
+            renderGltfOperator.SetOperand("world pose", poseTensor);
+
+            // RenderText Op
+            RenderTextOperatorConfiguration renderTextConfiguration = new RenderTextOperatorConfiguration(SecureMRFontTypeface.SansSerif, "en-US", 1440, 960);
+            var renderTextOp = pipeline.CreateOperator<RenderTextOperator>(renderTextConfiguration);
+
+            var text = pipeline.CreateTensor<byte, Scalar>(1, new TensorShape(new[] { 30 }),
+                Encoding.UTF8.GetBytes("Hello World"));
+            var startPosition = pipeline.CreateTensor<float, Point>(2, new TensorShape(new[] { 1 }),
+                new float[] { 0.1f, 0.3f });
+            var colors = pipeline.CreateTensor<byte, Color>(4, new TensorShape(new[] { 2 }),
+                new byte[] { 255, 255, 255, 255, 0, 0, 0, 255 }); // white text, black background
+            var textureId = pipeline.CreateTensor<ushort, Scalar>(1, new TensorShape(new[] { 1 }),
+                new ushort[] { 0 });
+            var fontSize = pipeline.CreateTensor<float, Scalar>(1, new TensorShape(new[] { 1 }),
+                new float[] { 144.0f });
+            
+            renderTextOp.SetOperand("text",text);
+            renderTextOp.SetOperand("start",startPosition);
+            renderTextOp.SetOperand("colors",colors);
+            renderTextOp.SetOperand("texture ID",textureId);
+            renderTextOp.SetOperand("font size",fontSize);
+            renderTextOp.SetOperand("gltf",gltfPlaceholderTensor);
+        }
         
-        var renderTextOp = pipeline.CreateOperator<RenderTextOperator>(renderTextConfiguration);
-        var renderGltfOp = pipeline.CreateOperator<SwitchGltfRenderStatusOperator>();
-        
-        var text = pipeline.CreateTensor<sbyte,Scalar>(1, new TensorShape(30));
-        var startPosition = pipeline.CreateTensor<float,Point>(2, new TensorShape(1));
-        var colors = pipeline.CreateTensor<byte,Color>(4, new TensorShape(2));
-        var textureId = pipeline.CreateTensor<ushort,Scalar>(1, new TensorShape(1));
-        var fontSize = pipeline.CreateTensor<float,Scalar>(1, new TensorShape(1));
-        var poseMat  = pipeline.CreateTensor<float,Matrix>(1, new TensorShape(4,4));
-        debugGltfPlaceholder = pipeline.CreateTensorReference<Gltf>();
-        
-        renderTextOp.SetOperand("text",text);
-        renderTextOp.SetOperand("start",startPosition);
-        renderTextOp.SetOperand("colors",colors);
-        renderTextOp.SetOperand("texture ID",textureId);
-        renderTextOp.SetOperand("font size",fontSize);
-        renderTextOp.SetOperand("gltf",debugGltfPlaceholder);
-        
-        renderGltfOp.SetOperand("gltf",debugGltfPlaceholder);
-        renderGltfOp.SetOperand("world pose",poseMat);
-        
-        string textValue = "Hello World";
-        text.Reset(Encoding.UTF8.GetBytes(textValue));
-        
-        float[] startValue = {0.1f, 0.3f};
-        startPosition.Reset(startValue);
-        
-        byte[] colorsValue = {255, 255, 255, 255, 0, 0, 0, 255};
-        colors.Reset(colorsValue);
-        
-        int[] textureId_value = {0};
-        textureId.Reset(textureId_value);
-        
-        float[] fontSize_value = {144.0f};
-        fontSize.Reset(fontSize_value);
+        private void RunPipeline()
+        {
+            Debug.Log("Running pipeline...");
 
-        float[] poseMatValue = {0.5f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.5f, 0.0f, 0.0f,
-            0.0f, 0.0f, 0.5f, -1.5f,
-            0.0f, 0.0f, 0.0f, 1.0f};
-        poseMat.Reset(poseMatValue);
+            var tensorMapping = new TensorMapping();
+          
+            tensorMapping.Set(gltfPlaceholderTensor, gltfTensor);
 
-        var gltfData = tvGltf.bytes;
-        debugGltf = provider.CreateTensor<Gltf>(gltfData);
+            pipeline.Execute(tensorMapping);
+        }
 
-        /*//create operator
-        var loadTextureOp = pipeline.CreateOperator<LoadTextureOperator>();
-        var updateGltfOp = pipeline.CreateOperator<UpdateGltfOperator>();
-        var renderGltfOp2 = pipeline.CreateOperator<SwitchGltfRenderStatusOperator>();
-
-        //create tensor
-        var gltfMaterialIndex = pipeline.CreateTensor<ushort,Scalar>(1, new TensorShape(1));
-        var gltfTextureIndex = pipeline.CreateTensor<ushort,Scalar>(1, new TensorShape(1));
-        var poseMat2 = pipeline.CreateTensor<float,Matrix>(1, new TensorShape(4,4));
-        var debugGltfPlaceholder2 = pipeline.CreateTensorReference<Gltf>();
-        var cropRgbRead = pipeline.CreateTensor<byte,Matrix>(3, new TensorShape(crop_width, crop_height));
-
-        //set operator input and output
-        loadTextureOp.SetOperand("rgb image", cropRgbRead);
-        loadTextureOp.SetOperand("gltf", debugGltfPlaceholder2);
-        loadTextureOp.SetResult("texture ID", gltfTextureIndex);
-
-        updateGltfOp.SetOperand("gltf",debugGltfPlaceholder2);
-        updateGltfOp.SetOperand("material ID",gltfMaterialIndex);
-        updateGltfOp.SetOperand("value",gltfTextureIndex);
-
-        renderGltfOp2.SetOperand("gltf",debugGltfPlaceholder2);
-        renderGltfOp2.SetOperand("world pose",poseMat2);
-
-        float[] poseMatValue2 =
-            {0.5f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.5f, 0.0f, 1.0f,
-            0.0f, 0.0f, 0.5f, -1.5f,
-            0.0f, 0.0f, 0.0f, 1.0f};
-        poseMat2.Reset(poseMatValue2);*/
-
-    }
-
-    private void Update()
-    {
-        RenderFrame();
-    }
-    
-    void RenderFrame()
-    {
-        var pipelineIOPair = pipeline.CreateTensorMapping();
-        pipelineIOPair.Set(debugGltfPlaceholder,debugGltf);
-        pipeline.Execute(pipelineIOPair);
     }
 }

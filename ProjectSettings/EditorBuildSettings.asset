@@ -14,9 +14,21 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/ColorPickerDemo.unity
     guid: 6d3785010e8c44ffe8f7edef9d926844
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SecureMRMonobehavior.unity
     guid: 3db4825f755494df2b680b14a43bb792
+  - enabled: 0
+    path: Assets/Scenes/MinimalApp.unity
+    guid: c4220b2c4650446068ce7489529219bf
+  - enabled: 1
+    path: Assets/Scenes/MnistwildDemoMonobehaviour.unity
+    guid: 897faf83dd04449fa956d6c74e129c60
+  - enabled: 0
+    path: Assets/Scenes/SampleScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 0
+    path: Assets/Scenes/UFODemo.unity
+    guid: 92310e2c2b7fa4904b63899f39292c39
   m_configObjects:
     Unity.XR.PXR.Settings: {fileID: 11400000, guid: 9801a56ed26d34dc0936cb367ad2a8a5, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
