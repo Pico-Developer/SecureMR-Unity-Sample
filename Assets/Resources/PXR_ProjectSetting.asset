@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 261e5777ad4ae374eb318821653de6aa, type: 3}
   m_Name: PXR_ProjectSetting
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Unity.XR.PICO::Unity.XR.PXR.PXR_ProjectSetting
   useContentProtect: 0
   handTracking: 0
   adaptiveHand: 0
@@ -29,11 +29,12 @@ MonoBehaviour:
   bodyTracking: 0
   adaptiveResolution: 0
   stageMode: 0
-  videoSeeThrough: 0
+  videoSeeThrough: 1
   spatialAnchor: 0
   sceneCapture: 0
   sharedAnchor: 0
   spatialMesh: 0
+  planeDetection: 0
   secureMR: 1
   meshLod: 0
   superResolution: 0
@@ -50,3 +51,5 @@ MonoBehaviour:
   validationFFREnabled: 0
   validationETFREnabled: 0
   portalInited: 1
+  isDataCollectionDisabled: 0
+  portalFirstSelected: 0
