@@ -213,8 +213,8 @@ MonoBehaviour:
   - {fileID: 2800000, guid: c57683c58e2b749f0b70c5712433b9ce, type: 3}
   - {fileID: 2800000, guid: 3d37b826900114bedbb7e183ae99aad1, type: 3}
   xrCamera: {fileID: 1767192439}
-  leftPortalTransform: {fileID: 0}
-  rightPortalTransform: {fileID: 0}
+  leftPortalTransform: {fileID: 202364688}
+  rightPortalTransform: {fileID: 1670256625}
   vstWidth: 3248
   vstHeight: 2464
   intervalBetweenPipelineRuns: 0.033
