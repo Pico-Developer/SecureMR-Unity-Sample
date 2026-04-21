@@ -215,8 +215,8 @@ MonoBehaviour:
   xrCamera: {fileID: 1767192439}
   leftPortalTransform: {fileID: 202364688}
   rightPortalTransform: {fileID: 1670256625}
-  vstWidth: 3248
-  vstHeight: 2464
+  vstWidth: 2048
+  vstHeight: 1536
   intervalBetweenPipelineRuns: 0.033
   portalMaterialId: 0
   styleImageDim: 256

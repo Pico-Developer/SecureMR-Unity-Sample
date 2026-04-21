@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.XR.PXR;
 using Unity.XR.PXR.SecureMR;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace PicoXR.SecureMR.Demo
 {
@@ -23,7 +24,7 @@ namespace PicoXR.SecureMR.Demo
         public int vstWidth = 3248;
         public int vstHeight = 2464;
         public float intervalBetweenPipelineRuns = 0.033f;
-        public ushort portalMaterialId = 0;
+        public ushort portalMaterialId = 1;
         public int styleImageDim = 256;
         public int contentImageDim = 384;
 
@@ -73,6 +74,10 @@ namespace PicoXR.SecureMR.Demo
         private bool[] m_styleNeedsPrediction;
         private float m_elapsedTime;
         private ulong m_lastPipelineRunId;
+        private bool m_leftTriggerPressed;
+        private bool m_rightTriggerPressed;
+        private InputAction m_leftTriggerAction;
+        private InputAction m_rightTriggerAction;
 
         private static readonly Vector3[] k_portalCornerLocal =
         {
@@ -124,21 +129,7 @@ namespace PicoXR.SecureMR.Demo
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Q))
-            {
-                AdvanceStyle(0);
-            }
-
-            if (Input.GetKeyDown(KeyCode.E))
-            {
-                AdvanceStyle(1);
-            }
-
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                AdvanceStyle(0);
-                AdvanceStyle(1);
-            }
+            UpdateControllerInput();
 
             UpdatePortalTensors();
 
@@ -154,6 +145,7 @@ namespace PicoXR.SecureMR.Demo
 
         private void OnDestroy()
         {
+            DisableInputActions();
             m_vstPipeline?.Destroy();
             m_stylePredictionPipeline?.Destroy();
             m_styleTransferPipeline?.Destroy();
@@ -183,6 +175,16 @@ namespace PicoXR.SecureMR.Demo
 
             m_provider?.Destroy();
             m_provider = null;
+        }
+
+        private void OnEnable()
+        {
+            EnableInputActions();
+        }
+
+        private void OnDisable()
+        {
+            DisableInputActions();
         }
 
         public void AdvanceLeftStyle()
@@ -370,6 +372,7 @@ namespace PicoXR.SecureMR.Demo
 
                 renderGltfOp.SetOperand("gltf", m_portalGltfPlaceholder[i]);
                 renderGltfOp.SetOperand("world pose", m_portalPosePlaceholder[i]);
+                renderGltfOp.SetOperand("view locked", m_portalPosePlaceholder[i]);
             }
         }
 
@@ -409,6 +412,50 @@ namespace PicoXR.SecureMR.Demo
             }
 
             m_styleTextureGlobal[side].Reset(rgb);
+        }
+
+        private void UpdateControllerInput()
+        {
+            float leftValue = m_leftTriggerAction != null ? m_leftTriggerAction.ReadValue<float>() : 0.0f;
+            float rightValue = m_rightTriggerAction != null ? m_rightTriggerAction.ReadValue<float>() : 0.0f;
+
+            bool leftPressed = leftValue >= 0.75f;
+            bool rightPressed = rightValue >= 0.75f;
+
+            if (leftPressed && !m_leftTriggerPressed)
+            {
+                AdvanceStyle(0);
+            }
+
+            if (rightPressed && !m_rightTriggerPressed)
+            {
+                AdvanceStyle(1);
+            }
+
+            m_leftTriggerPressed = leftPressed;
+            m_rightTriggerPressed = rightPressed;
+        }
+
+        private void EnableInputActions()
+        {
+            if (m_leftTriggerAction == null)
+            {
+                m_leftTriggerAction = new InputAction(type: InputActionType.Value, binding: "<XRController>{LeftHand}/trigger");
+            }
+
+            if (m_rightTriggerAction == null)
+            {
+                m_rightTriggerAction = new InputAction(type: InputActionType.Value, binding: "<XRController>{RightHand}/trigger");
+            }
+
+            m_leftTriggerAction.Enable();
+            m_rightTriggerAction.Enable();
+        }
+
+        private void DisableInputActions()
+        {
+            m_leftTriggerAction?.Disable();
+            m_rightTriggerAction?.Disable();
         }
 
         private void UpdatePortalTensors()
