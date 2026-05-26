@@ -9,11 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d84923cab4d03452a8a3b80e3386b9b4, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e0a90bb5cd1f4084a2c39abb6b1dee2, type: 3}
   m_Name: PXR_PicoDebuggerSO
-  m_EditorClassIdentifier: Unity.XR.PICO::Unity.XR.PXR.Debugger.PXR_PicoDebuggerSO
+  m_EditorClassIdentifier: ByteDance.PICO.Debugger::ByteDance.PICO.Debugger.PXR_PicoDebuggerSO
+  version: 0.3.1
   isOpen: 0
-  debuggerLauncherButton: 0
   startPosition: 0
-  maxInfoCount: 0
-  rulerClearButton: 0
+  inputActionAsset: {fileID: -944628639613478452, guid: 4fb558b749a8f4b719841ee60c7b5044, type: 3}
+  maxInfoCount: 500
+  worldPositionStep: 1
+  localPositionStep: 1
+  worldRotationStep: 1
+  localRotationStep: 1

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
 using UnityEngine.InputSystem;
 

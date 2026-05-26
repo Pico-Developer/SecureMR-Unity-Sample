@@ -1,5 +1,8 @@
 {
   "dependencies": {
+    "com.bytedance.ide.trae": "file:/Users/bytedance/Documents/Projects/Tools/Unity/Packages/TraeEditor_Unity-master",
+    "com.bytedance.pico.xr": "file:/Users/bytedance/Documents/Projects/SpatialML/Unity/XRSDK_Unity/sdk",
+    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
     "com.unity.ai.navigation": "2.0.12",
     "com.unity.collab-proxy": "2.12.4",
     "com.unity.ide.rider": "3.0.39",
@@ -12,7 +15,6 @@
     "com.unity.timeline": "1.8.12",
     "com.unity.ugui": "2.0.0",
     "com.unity.visualscripting": "1.9.11",
-    "com.unity.xr.picoxr": "https://github.com/Pico-Developer/PICO-Unity-Integration-SDK.git#release_3.4.0",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",
     "com.unity.modules.ai": "1.0.0",

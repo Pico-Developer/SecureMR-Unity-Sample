@@ -1,9 +1,9 @@
 using System;
 using System.Text;
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
-using Color = Unity.XR.PXR.SecureMR.Color;
+using Color = ByteDance.PICO.SecureMR.Color;
 
 namespace PicoXR.SecureMR.Demo
 {

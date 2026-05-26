@@ -1,6 +1,6 @@
 using System;
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
 
 namespace PicoXR.SecureMR.Demo
@@ -436,7 +436,7 @@ namespace PicoXR.SecureMR.Demo
             var scoreTextOp = m_renderPipeline.CreateOperator<RenderTextOperator>(
                 new RenderTextOperatorConfiguration(SecureMRFontTypeface.SansSerif, "en-US", 256, 256));
             var startPos = m_renderPipeline.CreateTensor<float, Point>(2, new TensorShape(1), new[] { 0.5f, 0.5f });
-            var colors = m_renderPipeline.CreateTensor<byte, Unity.XR.PXR.SecureMR.Color>(4, new TensorShape(2), new byte[] { 255, 255, 255, 255, 0, 0, 0, 255 });
+            var colors = m_renderPipeline.CreateTensor<byte, ByteDance.PICO.SecureMR.Color>(4, new TensorShape(2), new byte[] { 255, 255, 255, 255, 0, 0, 0, 255 });
             var textureId = m_renderPipeline.CreateTensor<ushort, Scalar>(1, new TensorShape(1), new ushort[] { 0 });
             var fontSize = m_renderPipeline.CreateTensor<float, Scalar>(1, new TensorShape(1), new[] { 64.0f });
 

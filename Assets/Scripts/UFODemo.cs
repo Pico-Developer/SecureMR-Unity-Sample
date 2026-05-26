@@ -16,11 +16,11 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Collections.Generic;
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
 using Unity.Jobs;
-using Color = Unity.XR.PXR.SecureMR.Color;
+using Color = ByteDance.PICO.SecureMR.Color;
 using System.Collections.Concurrent;
 
 namespace PicoXR.SecureMR.Demo

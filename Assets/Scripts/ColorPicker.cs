@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
-using Color = Unity.XR.PXR.SecureMR.Color;
+using Color = ByteDance.PICO.SecureMR.Color;
 
 namespace PicoXR.SecureMR.Demo
 {

@@ -13,8 +13,8 @@
 // limitations under the License.
 
 using System;
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
 
 namespace PicoXR.SecureMR.Demo
