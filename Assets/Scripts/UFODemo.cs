@@ -27,11 +27,18 @@ namespace PicoXR.SecureMR.Demo
 {
     public class UFODemo : MonoBehaviour
     {
+        [Tooltip("Face detection model (.tflite / LiteRT format).")]
         public TextAsset faceModel;
         public TextAsset ufoGltfAsset;
         public TextAsset anchorMatrixAsset;
         public int numFramesToRun = -1;
         public float intervalBetweenPipelineRuns = 0.033f;
+
+        [Tooltip("Inference target for the LiteRT model (NPU / GPU / CPU).")]
+        public SecureMRModelTarget modelTarget = SecureMRModelTarget.Npu;
+
+        [Tooltip("Number of CPU threads used when modelTarget is CPU. Ignored otherwise. 0 = runtime default.")]
+        public int cpuTargetNumThreads = 0;
         private int vstWidth = 256;
         private int vstHeight = 256;
 
@@ -220,7 +227,9 @@ namespace PicoXR.SecureMR.Demo
             vstCameraMatrixGlobal = provider.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 3, 3 }));
 
             // Create global tensors for UFO detection
-            modelConfig = new ModelOperatorConfiguration(faceModel.bytes, SecureMRModelType.QnnContextBinary, "face");
+            // LiteRT (TFLite) configuration replaces the previous QNN context-binary path.
+            var liteRtConfig = new LiteRtModelConfiguration(modelTarget, cpuTargetNumThreads);
+            modelConfig = new ModelOperatorConfiguration(faceModel.bytes, SecureMRModelType.LiteRtModel, "face", liteRtConfig);
             anchorBytes = anchorMatrixAsset.bytes;
             leftEyeUVGlobal = provider.CreateTensor<int, Point>(2, new TensorShape(new[] { 1 }));
 
@@ -283,18 +292,58 @@ namespace PicoXR.SecureMR.Demo
                     leftEyeUVPlaceholder = modelInferencePipeline.CreateTensorReference<int, Point>(2, new TensorShape(new[] { 1 }));
                     
                     // 1. model inference
+                    // The mediapipe face_detector.tflite splits anchors across two scales:
+                    //   box_coords_1: (512, 16), box_coords_2: (384, 16) -> concat to (896, 16)
+                    //   box_scores_1: (512, 1),  box_scores_2: (384, 1)  -> concat to (896, 1)
+                    // We keep the merged 896-row tensors so the downstream anchor/argmax
+                    // logic stays identical to the original demo.
                     var ufoAnchor = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 896, 16 }));
                     var ufoScores = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 896, 1}));
 
-                    // var modelConfig = new ModelOperatorConfiguration(ufoModel.bytes, SecureMRModelType.QnnContextBinary, "face");
+                    var boxCoords1 = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 512, 16 }));
+                    var boxCoords2 = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 384, 16 }));
+                    var boxScores1 = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 512, 1 }));
+                    var boxScores2 = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 384, 1 }));
+
                     modelConfig.AddInputMapping("image", "image", SecureMRModelEncoding.Float32);
-                    modelConfig.AddOutputMapping("box_coords", "box_coords", SecureMRModelEncoding.Float32);
-                    modelConfig.AddOutputMapping("box_scores", "box_scores", SecureMRModelEncoding.Float32);
-                    
+                    modelConfig.AddOutputMapping("box_coords_1", "box_coords_1", SecureMRModelEncoding.Float32);
+                    modelConfig.AddOutputMapping("box_coords_2", "box_coords_2", SecureMRModelEncoding.Float32);
+                    modelConfig.AddOutputMapping("box_scores_1", "box_scores_1", SecureMRModelEncoding.Float32);
+                    modelConfig.AddOutputMapping("box_scores_2", "box_scores_2", SecureMRModelEncoding.Float32);
+
                     var modelOp = modelInferencePipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
                     modelOp.SetOperand("image", vstImagePlaceholder);
-                    modelOp.SetResult("box_coords", ufoAnchor);
-                    modelOp.SetResult("box_scores", ufoScores);
+                    modelOp.SetResult("box_coords_1", boxCoords1);
+                    modelOp.SetResult("box_coords_2", boxCoords2);
+                    modelOp.SetResult("box_scores_1", boxScores1);
+                    modelOp.SetResult("box_scores_2", boxScores2);
+
+                    // Concatenate the two anchor scales into the merged ufoAnchor / ufoScores
+                    // tensors via dst-slice copies (rows [0:512] and [512:896]).
+                    var dstSliceCoordsFirst = modelInferencePipeline.CreateTensor<int, Slice>(2, new TensorShape(new[] { 2 }), new[] { 0, 512, 0, 16 });
+                    var dstSliceCoordsSecond = modelInferencePipeline.CreateTensor<int, Slice>(2, new TensorShape(new[] { 2 }), new[] { 512, 896, 0, 16 });
+                    var dstSliceScoresFirst = modelInferencePipeline.CreateTensor<int, Slice>(2, new TensorShape(new[] { 2 }), new[] { 0, 512, 0, 1 });
+                    var dstSliceScoresSecond = modelInferencePipeline.CreateTensor<int, Slice>(2, new TensorShape(new[] { 2 }), new[] { 512, 896, 0, 1 });
+
+                    var concatCoords1Op = modelInferencePipeline.CreateOperator<AssignmentOperator>();
+                    concatCoords1Op.SetOperand("src", boxCoords1);
+                    concatCoords1Op.SetOperand("dst slices", dstSliceCoordsFirst);
+                    concatCoords1Op.SetResult("dst", ufoAnchor);
+
+                    var concatCoords2Op = modelInferencePipeline.CreateOperator<AssignmentOperator>();
+                    concatCoords2Op.SetOperand("src", boxCoords2);
+                    concatCoords2Op.SetOperand("dst slices", dstSliceCoordsSecond);
+                    concatCoords2Op.SetResult("dst", ufoAnchor);
+
+                    var concatScores1Op = modelInferencePipeline.CreateOperator<AssignmentOperator>();
+                    concatScores1Op.SetOperand("src", boxScores1);
+                    concatScores1Op.SetOperand("dst slices", dstSliceScoresFirst);
+                    concatScores1Op.SetResult("dst", ufoScores);
+
+                    var concatScores2Op = modelInferencePipeline.CreateOperator<AssignmentOperator>();
+                    concatScores2Op.SetOperand("src", boxScores2);
+                    concatScores2Op.SetOperand("dst slices", dstSliceScoresSecond);
+                    concatScores2Op.SetResult("dst", ufoScores);
 
                     // 2. apply anchor
                     // var anchorBytes = anchorMatrixAsset.bytes;
