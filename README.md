@@ -15,7 +15,7 @@ This repository contains Unity-based sample projects demonstrating SecureMR func
 │   │   ├── MinimalApp          # Basic application example
 │   │   ├── MnistwildDemo       # MNIST ML model demonstration
 │   │   ├── SecureMRSample      # Main SecureMR functionality demo
-│   │   └── UFOSample           # UFO face tracking demo
+│   │   └── UFOSample           # UFO face tracking sample
 │   ├── Scripts/                # C# script files for demos
 │   ├── Settings/               # Project configuration files
 │   ├── XR/                     # XR settings and loaders
