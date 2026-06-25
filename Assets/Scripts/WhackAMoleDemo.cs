@@ -55,7 +55,8 @@ namespace PicoXR.SecureMR.Demo
         private Tensor[] m_redboxGltfGlobal;
 
         private Tensor m_vstLeftPlaceholder;
-        private Tensor m_resizedLeftPlaceholder;
+        private Tensor m_resizedLeftWrite;
+        private Tensor m_resizedLeftRead;
         private Tensor m_isPoseDetectedPlaceholder;
         private Tensor m_roiAffinePlaceholder;
         private Tensor m_roiAffineUpdatedPlaceholder;
@@ -66,6 +67,7 @@ namespace PicoXR.SecureMR.Demo
         private Tensor m_molesVisiblePlaceholder;
         private Tensor m_moleDeadlinesPlaceholder;
         private Tensor m_scorePlaceholder;
+        private Tensor m_scoreRenderPlaceholder;
         private Tensor m_realtimeSinceStartupPlaceholder;
         private Tensor m_moleOnTimingsPlaceholder;
         private Tensor m_moleOffTimingsPlaceholder;
@@ -78,14 +80,6 @@ namespace PicoXR.SecureMR.Demo
         private float m_elapsedTime;
         private ulong m_lastPipelineRunId;
         private System.Random m_random;
-
-        private float[] m_stagePoseData =
-        {
-            1.0f, 0.0f, 0.0f, 0.6f,
-            0.0f, 1.0f, 0.0f, -0.2f,
-            0.0f, 0.0f, 1.0f, -2.5f,
-            0.0f, 0.0f, 0.0f, 1.0f
-        };
 
         private void Awake()
         {
@@ -288,7 +282,7 @@ namespace PicoXR.SecureMR.Demo
 
             var resizedUint8 = m_vstPipeline.CreateTensor<byte, Matrix>(3, new TensorShape(detectionInputSize, detectionInputSize));
             var resizedFloat = m_vstPipeline.CreateTensor<float, Matrix>(3, new TensorShape(detectionInputSize, detectionInputSize));
-            m_resizedLeftPlaceholder = m_vstPipeline.CreateTensorReference<float, Matrix>(3, new TensorShape(detectionInputSize, detectionInputSize));
+            m_resizedLeftWrite = m_vstPipeline.CreateTensorReference<float, Matrix>(3, new TensorShape(detectionInputSize, detectionInputSize));
 
             var applyAffineOp = m_vstPipeline.CreateOperator<ApplyAffineOperator>();
             applyAffineOp.SetOperand("affine", resizeMat);
@@ -302,29 +296,16 @@ namespace PicoXR.SecureMR.Demo
             var normalizeOp = m_vstPipeline.CreateOperator<ArithmeticComposeOperator>(
                 new ArithmeticComposeOperatorConfiguration("{0} / 255.0"));
             normalizeOp.SetOperand("{0}", resizedFloat);
-            normalizeOp.SetResult("result", m_resizedLeftPlaceholder);
+            normalizeOp.SetResult("result", m_resizedLeftWrite);
         }
 
         private void CreateDetectionPipeline()
         {
             m_detectionPipeline = m_provider.CreatePipeline();
 
-            m_resizedLeftPlaceholder = m_detectionPipeline.CreateTensorReference<float, Matrix>(3, new TensorShape(detectionInputSize, detectionInputSize));
+            m_resizedLeftRead = m_detectionPipeline.CreateTensorReference<float, Matrix>(3, new TensorShape(detectionInputSize, detectionInputSize));
             m_roiAffinePlaceholder = m_detectionPipeline.CreateTensorReference<float, Matrix>(1, new TensorShape(2, 3));
             m_isPoseDetectedPlaceholder = m_detectionPipeline.CreateTensorReference<byte, Scalar>(1, new TensorShape(1));
-
-            var poseAnchor = m_detectionPipeline.CreateTensor<float, Matrix>(1, new TensorShape(896, 12));
-            var poseScores = m_detectionPipeline.CreateTensor<float, Matrix>(1, new TensorShape(896, 1));
-
-            var modelConfig = new ModelOperatorConfiguration(detectionModel.bytes, SecureMRModelType.QnnContextBinary, "pose");
-            modelConfig.AddInputMapping("image", "image", SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping("box_coords", "pose_anchor", SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping("box_scores", "score", SecureMRModelEncoding.Float32);
-
-            var modelOp = m_detectionPipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
-            modelOp.SetOperand("image", m_resizedLeftPlaceholder);
-            modelOp.SetResult("pose_anchor", poseAnchor);
-            modelOp.SetResult("score", poseScores);
 
             var identityAffine = m_detectionPipeline.CreateTensor<float, Matrix>(1, new TensorShape(2, 3), new[]
             {
@@ -361,6 +342,10 @@ namespace PicoXR.SecureMR.Demo
             var roiImageFloat = m_landmarkPipeline.CreateTensor<float, Matrix>(3, new TensorShape(roiSize, roiSize));
             var roiImageNormalized = m_landmarkPipeline.CreateTensor<float, Matrix>(3, new TensorShape(roiSize, roiSize));
             var landmarks = m_landmarkPipeline.CreateTensor<float, Matrix>(1, new TensorShape(39, 3));
+            var landmarkImageLandmarks = m_landmarkPipeline.CreateTensor<float, Matrix>(1, new TensorShape(39, 5));
+            var landmarkPresence = m_landmarkPipeline.CreateTensor<float, Scalar>(1, new TensorShape(1));
+            var landmarkSegmentation = m_landmarkPipeline.CreateTensor<float, Matrix>(1, new TensorShape(roiSize, roiSize));
+            var landmarkHeatmap = m_landmarkPipeline.CreateTensor<float, Matrix>(39, new TensorShape(64, 64));
 
             var applyAffineOp = m_landmarkPipeline.CreateOperator<ApplyAffineOperator>();
             applyAffineOp.SetOperand("affine", m_roiAffineUpdatedPlaceholder);
@@ -376,15 +361,16 @@ namespace PicoXR.SecureMR.Demo
             normalizeOp.SetOperand("{0}", roiImageFloat);
             normalizeOp.SetResult("result", roiImageNormalized);
 
-            var modelConfig = new ModelOperatorConfiguration(landmarkModel.bytes, SecureMRModelType.QnnContextBinary, "pose_landmark");
-            modelConfig.AddInputMapping("input_1", "input_1", SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping("Identity_4", "landmarks", SecureMRModelEncoding.Float32);
+            var modelConfig = new ModelOperatorConfiguration(landmarkModel.bytes, SecureMRModelType.LiteRtModel, "pose_landmark");
 
             var modelOp = m_landmarkPipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
             modelOp.SetOperand("input_1", roiImageNormalized);
+            modelOp.SetResult("image_landmarks", landmarkImageLandmarks);
+            modelOp.SetResult("presence", landmarkPresence);
+            modelOp.SetResult("segmentation", landmarkSegmentation);
+            modelOp.SetResult("heatmap", landmarkHeatmap);
             modelOp.SetResult("landmarks", landmarks);
 
-            var stagePose = m_landmarkPipeline.CreateTensor<float, Matrix>(1, new TensorShape(4, 4), m_stagePoseData);
             var jsConfig = new JavascriptOperatorConfiguration(jointsTransformerJs.text);
             var jsOp = m_landmarkPipeline.CreateOperator<JavascriptOperator>(jsConfig);
             jsOp.SetOperand("positionArray", landmarks);
@@ -395,7 +381,6 @@ namespace PicoXR.SecureMR.Demo
             jsOp.SetOperand("moleVisibleArray", m_molesVisiblePlaceholder);
             jsOp.SetOperand("moleDeadlines", m_moleDeadlinesPlaceholder);
             jsOp.SetOperand("score", m_scorePlaceholder);
-            jsOp.SetOperand("stagePose", stagePose);
             jsOp.SetResult("matrixArray", m_bodyLandmarkPlaceholder);
             jsOp.SetResult("moleVisibleArray", m_molesVisiblePlaceholder);
             jsOp.SetResult("moleDeadlines", m_moleDeadlinesPlaceholder);
@@ -408,6 +393,7 @@ namespace PicoXR.SecureMR.Demo
 
             m_poseMarkerGltfPlaceholder = m_renderPipeline.CreateTensorReference<Gltf>();
             m_scoreboardGltfPlaceholder = m_renderPipeline.CreateTensorReference<Gltf>();
+            m_scoreRenderPlaceholder = m_renderPipeline.CreateTensorReference<int, Scalar>(1, new TensorShape(1));
             m_duckGltfPlaceholder = new Tensor[maxMoles];
             m_redboxGltfPlaceholder = new Tensor[maxJoints];
 
@@ -434,13 +420,13 @@ namespace PicoXR.SecureMR.Demo
             renderScoreboard.SetOperand("world pose", scoreboardPose);
 
             var scoreTextOp = m_renderPipeline.CreateOperator<RenderTextOperator>(
-                new RenderTextOperatorConfiguration(SecureMRFontTypeface.SansSerif, "en-US", 256, 256));
+                new RenderTextOperatorConfiguration(SecureMRFontTypeface.SansSerif, "en-US", 512, 512));
             var startPos = m_renderPipeline.CreateTensor<float, Point>(2, new TensorShape(1), new[] { 0.5f, 0.5f });
             var colors = m_renderPipeline.CreateTensor<byte, ByteDance.PICO.SecureMR.Color>(4, new TensorShape(2), new byte[] { 255, 255, 255, 255, 0, 0, 0, 255 });
             var textureId = m_renderPipeline.CreateTensor<ushort, Scalar>(1, new TensorShape(1), new ushort[] { 0 });
             var fontSize = m_renderPipeline.CreateTensor<float, Scalar>(1, new TensorShape(1), new[] { 64.0f });
 
-            scoreTextOp.SetOperand("text", m_scorePlaceholder);
+            scoreTextOp.SetOperand("text", m_scoreRenderPlaceholder);
             scoreTextOp.SetOperand("start", startPos);
             scoreTextOp.SetOperand("colors", colors);
             scoreTextOp.SetOperand("texture ID", textureId);
@@ -516,14 +502,14 @@ namespace PicoXR.SecureMR.Demo
         {
             var mapping = new TensorMapping();
             mapping.Set(m_vstLeftWrite, m_vstLeftGlobal);
-            mapping.Set(m_resizedLeftPlaceholder, m_resizedLeftGlobal);
+            mapping.Set(m_resizedLeftWrite, m_resizedLeftGlobal);
             return pre == 0 ? m_vstPipeline.Execute(mapping) : m_vstPipeline.ExecuteAfter(pre, mapping);
         }
 
         private ulong RunDetection(ulong pre)
         {
             var mapping = new TensorMapping();
-            mapping.Set(m_resizedLeftPlaceholder, m_resizedLeftGlobal);
+            mapping.Set(m_resizedLeftRead, m_resizedLeftGlobal);
             mapping.Set(m_roiAffinePlaceholder, m_roiAffineGlobal);
             mapping.Set(m_isPoseDetectedPlaceholder, m_isPoseDetectedGlobal);
             return pre == 0 ? m_detectionPipeline.Execute(mapping) : m_detectionPipeline.ExecuteAfter(pre, mapping);
@@ -551,6 +537,7 @@ namespace PicoXR.SecureMR.Demo
             var mapping = new TensorMapping();
             mapping.Set(m_poseMarkerGltfPlaceholder, m_poseMarkerGltfGlobal);
             mapping.Set(m_scoreboardGltfPlaceholder, m_scoreboardGltfGlobal);
+            mapping.Set(m_scoreRenderPlaceholder, m_scoreGlobal);
 
             for (int i = 0; i < maxMoles; i++)
             {

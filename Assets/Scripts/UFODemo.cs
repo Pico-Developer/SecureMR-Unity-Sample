@@ -305,12 +305,6 @@ namespace PicoXR.SecureMR.Demo
                     var boxScores1 = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 512, 1 }));
                     var boxScores2 = modelInferencePipeline.CreateTensor<float, Matrix>(1, new TensorShape(new[] { 384, 1 }));
 
-                    modelConfig.AddInputMapping("image", "image", SecureMRModelEncoding.Float32);
-                    modelConfig.AddOutputMapping("box_coords_1", "box_coords_1", SecureMRModelEncoding.Float32);
-                    modelConfig.AddOutputMapping("box_coords_2", "box_coords_2", SecureMRModelEncoding.Float32);
-                    modelConfig.AddOutputMapping("box_scores_1", "box_scores_1", SecureMRModelEncoding.Float32);
-                    modelConfig.AddOutputMapping("box_scores_2", "box_scores_2", SecureMRModelEncoding.Float32);
-
                     var modelOp = modelInferencePipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
                     modelOp.SetOperand("image", vstImagePlaceholder);
                     modelOp.SetResult("box_coords_1", boxCoords1);

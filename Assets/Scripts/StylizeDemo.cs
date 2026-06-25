@@ -267,9 +267,7 @@ namespace PicoXR.SecureMR.Demo
             normalizeOp.SetOperand("{0}", styleRgbFloat);
             normalizeOp.SetResult("result", styleRgbNormalized);
 
-            var modelConfig = new ModelOperatorConfiguration(stylePredictorModel.bytes, SecureMRModelType.QnnContextBinary, "style_predictor");
-            modelConfig.AddInputMapping(stylePredictorInputNodeName, stylePredictorInputOperatorIOName, SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping(stylePredictorOutputNodeName, stylePredictorOutputOperatorIOName, SecureMRModelEncoding.Float32);
+            var modelConfig = new ModelOperatorConfiguration(stylePredictorModel.bytes, SecureMRModelType.LiteRtModel, "style_predictor");
 
             var modelOp = m_stylePredictionPipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
             modelOp.SetOperand(stylePredictorInputOperatorIOName, styleRgbNormalized);
@@ -317,10 +315,7 @@ namespace PicoXR.SecureMR.Demo
             normalizeOp.SetOperand("{0}", slicedRgbFloat);
             normalizeOp.SetResult("result", normalizedRgb);
 
-            var modelConfig = new ModelOperatorConfiguration(styleTransferModel.bytes, SecureMRModelType.QnnContextBinary, "style_transfer");
-            modelConfig.AddInputMapping(styleTransferContentInputNodeName, styleTransferContentInputOperatorIOName, SecureMRModelEncoding.Float32);
-            modelConfig.AddInputMapping(styleTransferStyleInputNodeName, styleTransferStyleInputOperatorIOName, SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping(styleTransferOutputNodeName, styleTransferOutputOperatorIOName, SecureMRModelEncoding.Float32);
+            var modelConfig = new ModelOperatorConfiguration(styleTransferModel.bytes, SecureMRModelType.LiteRtModel, "style_transfer");
 
             var modelOp = m_styleTransferPipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
             modelOp.SetOperand(styleTransferContentInputOperatorIOName, normalizedRgb);

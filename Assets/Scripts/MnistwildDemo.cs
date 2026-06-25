@@ -101,8 +101,6 @@ namespace PicoXR.SecureMR.Demo
                 SecureMRModelType.LiteRtModel,
                 "mnist",
                 liteRtConfig);
-            modelConfig.AddInputMapping("input", "input", SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping("scores", "scores", SecureMRModelEncoding.Float32);
             var modelOp = pipelineParam.CreateOperator<RunModelInferenceOperator>(modelConfig);
 
             // Keep post-processing outside the TFLite graph, following UFODemo's LiteRT pattern.
