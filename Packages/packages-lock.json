@@ -1,34 +1,17 @@
 {
   "dependencies": {
-    "com.bytedance.ide.trae": {
-      "version": "file:/Users/bytedance/Documents/Projects/Tools/Unity/Packages/TraeEditor_Unity-master",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.unity.test-framework": "1.1.33"
-      }
-    },
     "com.bytedance.pico.xr": {
-      "version": "file:/Users/bytedance/Documents/Projects/SpatialML/Unity/XRSDK_Unity/sdk",
+      "version": "https://github.com/Pico-Developer/PICO-Unity-SDK.git?path=/XR",
       "depth": 0,
-      "source": "local",
+      "source": "git",
       "dependencies": {
         "com.unity.xr.management": "4.0.0",
         "com.unity.xr.interaction.toolkit": "2.0.0",
         "com.unity.xr.core-utils": "2.3.0",
         "com.unity.ugui": "1.0.0",
         "com.unity.textmeshpro": "3.0.6"
-      }
-    },
-    "com.coplaydev.unity-mcp": {
-      "version": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.0.2",
-        "com.unity.test-framework": "1.1.31"
       },
-      "hash": "73eb27aeccfa8e0676eaf3304136e9b85953d913"
+      "hash": "5a23ab1da180ac7b6a119fca02741a1632469075"
     },
     "com.unity.ai.navigation": {
       "version": "2.0.12",
@@ -127,13 +110,6 @@
     "com.unity.nuget.mono-cecil": {
       "version": "1.11.6",
       "depth": 3,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.nuget.newtonsoft-json": {
-      "version": "3.2.2",
-      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"

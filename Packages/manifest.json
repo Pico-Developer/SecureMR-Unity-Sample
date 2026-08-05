@@ -1,8 +1,6 @@
 {
   "dependencies": {
-    "com.bytedance.ide.trae": "file:/Users/bytedance/Documents/Projects/Tools/Unity/Packages/TraeEditor_Unity-master",
-    "com.bytedance.pico.xr": "file:/Users/bytedance/Documents/Projects/SpatialML/Unity/XRSDK_Unity/sdk",
-    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
+    "com.bytedance.pico.xr": "https://github.com/Pico-Developer/PICO-Unity-SDK.git?path=/XR",
     "com.unity.ai.navigation": "2.0.12",
     "com.unity.collab-proxy": "2.12.4",
     "com.unity.ide.rider": "3.0.39",
