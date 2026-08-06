@@ -11,7 +11,9 @@ namespace PicoXR.SecureMR.Demo
     {
         [Header("Assets")]
         public TextAsset portalGltfAsset;
+        [Tooltip("Style prediction model (.tflite / LiteRT format).")]
         public TextAsset stylePredictorModel;
+        [Tooltip("Style transfer model (.tflite / LiteRT format).")]
         public TextAsset styleTransferModel;
         public Texture2D[] styleTextures;
 
@@ -29,17 +31,12 @@ namespace PicoXR.SecureMR.Demo
         public int contentImageDim = 384;
 
         [Header("Model IO")]
-        public string stylePredictorInputNodeName = "style_image";
         public string stylePredictorInputOperatorIOName = "style_image";
-        public string stylePredictorOutputNodeName = "mobilenet_conv_Conv_BiasAdd";
-        public string stylePredictorOutputOperatorIOName = "mobilenet_conv_Conv_BiasAdd";
+        public string stylePredictorOutputOperatorIOName = "mobilenet_conv/Conv/BiasAdd";
 
-        public string styleTransferContentInputNodeName = "content_image";
         public string styleTransferContentInputOperatorIOName = "content_image";
-        public string styleTransferStyleInputNodeName = "mobilenet_conv_Conv_BiasAdd";
-        public string styleTransferStyleInputOperatorIOName = "mobilenet_conv_Conv_BiasAdd";
-        public string styleTransferOutputNodeName = "transformer_expand_conv3_conv_Sigmoid";
-        public string styleTransferOutputOperatorIOName = "transformer_expand_conv3_conv_Sigmoid";
+        public string styleTransferStyleInputOperatorIOName = "mobilenet_conv/Conv/BiasAdd";
+        public string styleTransferOutputOperatorIOName = "transformer/expand/conv3/conv/Sigmoid";
 
         private Provider m_provider;
 
@@ -274,9 +271,10 @@ namespace PicoXR.SecureMR.Demo
             normalizeOp.SetOperand("{0}", styleRgbFloat);
             normalizeOp.SetResult("result", styleRgbNormalized);
 
-            var modelConfig = new ModelOperatorConfiguration(stylePredictorModel.bytes, SecureMRModelType.QnnContextBinary, "style_predictor");
-            modelConfig.AddInputMapping(stylePredictorInputNodeName, stylePredictorInputOperatorIOName, SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping(stylePredictorOutputNodeName, stylePredictorOutputOperatorIOName, SecureMRModelEncoding.Float32);
+            var modelConfig = new ModelOperatorConfiguration(
+                stylePredictorModel.bytes,
+                SecureMRModelType.LiteRtModel,
+                "style_predictor");
 
             var modelOp = m_stylePredictionPipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
             modelOp.SetOperand(stylePredictorInputOperatorIOName, styleRgbNormalized);
@@ -324,10 +322,10 @@ namespace PicoXR.SecureMR.Demo
             normalizeOp.SetOperand("{0}", slicedRgbFloat);
             normalizeOp.SetResult("result", normalizedRgb);
 
-            var modelConfig = new ModelOperatorConfiguration(styleTransferModel.bytes, SecureMRModelType.QnnContextBinary, "style_transfer");
-            modelConfig.AddInputMapping(styleTransferContentInputNodeName, styleTransferContentInputOperatorIOName, SecureMRModelEncoding.Float32);
-            modelConfig.AddInputMapping(styleTransferStyleInputNodeName, styleTransferStyleInputOperatorIOName, SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping(styleTransferOutputNodeName, styleTransferOutputOperatorIOName, SecureMRModelEncoding.Float32);
+            var modelConfig = new ModelOperatorConfiguration(
+                styleTransferModel.bytes,
+                SecureMRModelType.LiteRtModel,
+                "style_transfer");
 
             var modelOp = m_styleTransferPipeline.CreateOperator<RunModelInferenceOperator>(modelConfig);
             modelOp.SetOperand(styleTransferContentInputOperatorIOName, normalizedRgb);

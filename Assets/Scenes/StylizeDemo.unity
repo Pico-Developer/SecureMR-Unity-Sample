@@ -226,16 +226,11 @@ MonoBehaviour:
   portalTextureProjectionScaleX: 1.3
   portalTextureProjectionScaleY: 1
   useRawVstPortalTexture: 0
-  stylePredictorInputNodeName: style_image
   stylePredictorInputOperatorIOName: style_image
-  stylePredictorOutputNodeName: mobilenet_conv_Conv_BiasAdd
-  stylePredictorOutputOperatorIOName: mobilenet_conv_Conv_BiasAdd
-  styleTransferContentInputNodeName: content_image
+  stylePredictorOutputOperatorIOName: mobilenet_conv/Conv/BiasAdd
   styleTransferContentInputOperatorIOName: content_image
-  styleTransferStyleInputNodeName: mobilenet_conv_Conv_BiasAdd
-  styleTransferStyleInputOperatorIOName: mobilenet_conv_Conv_BiasAdd
-  styleTransferOutputNodeName: transformer_expand_conv3_conv_Sigmoid
-  styleTransferOutputOperatorIOName: transformer_expand_conv3_conv_Sigmoid
+  styleTransferStyleInputOperatorIOName: mobilenet_conv/Conv/BiasAdd
+  styleTransferOutputOperatorIOName: transformer/expand/conv3/conv/Sigmoid
 --- !u!1 &928811618
 GameObject:
   m_ObjectHideFlags: 0
