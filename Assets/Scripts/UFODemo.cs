@@ -25,7 +25,7 @@ using System.Collections.Concurrent;
 
 namespace PicoXR.SecureMR.Demo
 {
-    public class UFODemo : MonoBehaviour
+    public class UFODemo : MonoBehaviour, ISecureMRServiceCleanup
     {
         [Tooltip("Face detection model (.tflite / LiteRT format).")]
         public TextAsset faceModel;
@@ -93,6 +93,7 @@ namespace PicoXR.SecureMR.Demo
         private float modelElapsed = 0f;
         private float mapElapsed = 0f;
         private float renderElapsed = 0f;
+        private bool m_isShuttingDown;
 
         private void Awake()
         {
@@ -182,6 +183,11 @@ namespace PicoXR.SecureMR.Demo
 
         private void Update()
         {
+            if (m_isShuttingDown || provider == null)
+            {
+                return;
+            }
+
             // Check if all pipelines are ready before proceeding
             if (!vstPipelineReady || !modelInferencePipelineReady || !map2dTo3dPipelineReady || !renderPipelineReady)
                 return;
@@ -210,6 +216,24 @@ namespace PicoXR.SecureMR.Demo
             }
 
             RunRenderPipeline();
+        }
+
+        private void OnDestroy()
+        {
+            ShutdownSecureMR();
+        }
+
+        public void ShutdownSecureMR()
+        {
+            if (m_isShuttingDown)
+            {
+                return;
+            }
+
+            m_isShuttingDown = true;
+            Provider providerToDestroy = provider;
+            provider = null;
+            providerToDestroy?.Destroy();
         }
 
         private void CreateProvider()

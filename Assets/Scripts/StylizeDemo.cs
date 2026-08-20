@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 
 namespace PicoXR.SecureMR.Demo
 {
-    public class StylizeDemo : MonoBehaviour
+    public class StylizeDemo : MonoBehaviour, ISecureMRServiceCleanup
     {
         [Header("Assets")]
         public TextAsset portalGltfAsset;
@@ -75,6 +75,7 @@ namespace PicoXR.SecureMR.Demo
         private ulong m_lastPipelineRunId;
         private bool m_leftTriggerPressed;
         private bool m_rightTriggerPressed;
+        private bool m_isShuttingDown;
         private InputAction m_leftTriggerAction;
         private InputAction m_rightTriggerAction;
 
@@ -126,7 +127,7 @@ namespace PicoXR.SecureMR.Demo
 
         private void Update()
         {
-            if (m_provider == null)
+            if (m_isShuttingDown || m_provider == null)
             {
                 return;
             }
@@ -148,35 +149,7 @@ namespace PicoXR.SecureMR.Demo
         private void OnDestroy()
         {
             DisableInputActions();
-            m_vstPipeline?.Destroy();
-            m_stylePredictionPipeline?.Destroy();
-            m_styleTransferPipeline?.Destroy();
-            m_renderPipeline?.Destroy();
-
-            if (m_portalGltfGlobal != null)
-            {
-                for (int i = 0; i < m_portalGltfGlobal.Length; i++)
-                {
-                    m_portalGltfGlobal[i]?.Destroy();
-                }
-            }
-
-            m_vstLeftGlobal?.Destroy();
-
-            if (m_styleTextureGlobal != null)
-            {
-                for (int i = 0; i < m_styleTextureGlobal.Length; i++)
-                {
-                    m_styleTextureGlobal[i]?.Destroy();
-                    m_predictedStyleGlobal[i]?.Destroy();
-                    m_portalPoseGlobal[i]?.Destroy();
-                    m_srcPointsGlobal[i]?.Destroy();
-                    m_stylizedRgbGlobal[i]?.Destroy();
-                }
-            }
-
-            m_provider?.Destroy();
-            m_provider = null;
+            ShutdownSecureMR();
         }
 
         private void OnEnable()
@@ -203,6 +176,19 @@ namespace PicoXR.SecureMR.Demo
         {
             AdvanceStyle(0);
             AdvanceStyle(1);
+        }
+
+        public void ShutdownSecureMR()
+        {
+            if (m_isShuttingDown)
+            {
+                return;
+            }
+
+            m_isShuttingDown = true;
+            Provider providerToDestroy = m_provider;
+            m_provider = null;
+            providerToDestroy?.Destroy();
         }
 
         private void CreateProvider()

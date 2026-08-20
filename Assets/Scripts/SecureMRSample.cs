@@ -21,7 +21,7 @@ using Color = ByteDance.PICO.SecureMR.Color;
 
 namespace PicoXR.SecureMR.Demo
 {
-    public class SecureMRSample : MonoBehaviour
+    public class SecureMRSample : MonoBehaviour, ISecureMRServiceCleanup
     {
         public TextAsset helmetGltfAsset;
         public int vstWidth = 1024;
@@ -45,7 +45,29 @@ namespace PicoXR.SecureMR.Demo
 
         private void Update()
         {
+            if (provider == null)
+            {
+                return;
+            }
+
             RunPipeline();
+        }
+
+        private void OnDestroy()
+        {
+            ShutdownSecureMR();
+        }
+
+        public void ShutdownSecureMR()
+        {
+            if (provider == null)
+            {
+                return;
+            }
+
+            Provider providerToDestroy = provider;
+            provider = null;
+            providerToDestroy.Destroy();
         }
 
         private void CreateProvider()

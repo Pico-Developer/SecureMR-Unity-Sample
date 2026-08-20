@@ -19,7 +19,7 @@ using Color = ByteDance.PICO.SecureMR.Color;
 
 namespace PicoXR.SecureMR.Demo
 {
-    public class ColorPicker : MonoBehaviour
+    public class ColorPicker : MonoBehaviour, ISecureMRServiceCleanup
     {
         public TextAsset cubeGltfAsset;
         public Transform cubePosition;
@@ -66,11 +66,28 @@ namespace PicoXR.SecureMR.Demo
         }
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
+        private void Start()
         {
             CreateProvider();
             CreatePipeline();
             CreateRenderer();
+        }
+
+        private void OnDestroy()
+        {
+            ShutdownSecureMR();
+        }
+
+        public void ShutdownSecureMR()
+        {
+            if (provider == null)
+            {
+                return;
+            }
+
+            Provider providerToDestroy = provider;
+            provider = null;
+            providerToDestroy.Destroy();
         }
 
         private void CreateProvider()
@@ -282,8 +299,13 @@ namespace PicoXR.SecureMR.Demo
         }
         
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
+            if (provider == null)
+            {
+                return;
+            }
+
             var pipelineRun = RenderFrame();
             elapsed += Time.deltaTime;
             if (elapsed > pickColorEveryXSeconds)
@@ -293,5 +315,6 @@ namespace PicoXR.SecureMR.Demo
             }
             
         }
+
     }
 }
