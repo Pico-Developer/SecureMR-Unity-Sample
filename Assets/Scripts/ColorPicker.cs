@@ -17,9 +17,9 @@ using ByteDance.PICO.SecureMR;
 using UnityEngine;
 using Color = ByteDance.PICO.SecureMR.Color;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
-    public class ColorPicker : MonoBehaviour, ISecureMRServiceCleanup
+    public class ColorPicker : MonoBehaviour, ISpatialMLServiceCleanup
     {
         public TextAsset cubeGltfAsset;
         public Transform cubePosition;
@@ -75,10 +75,10 @@ namespace PicoXR.SecureMR.Demo
 
         private void OnDestroy()
         {
-            ShutdownSecureMR();
+            ShutdownSpatialML();
         }
 
-        public void ShutdownSecureMR()
+        public void ShutdownSpatialML()
         {
             if (provider == null)
             {

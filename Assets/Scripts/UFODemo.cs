@@ -23,9 +23,9 @@ using Unity.Jobs;
 using Color = ByteDance.PICO.SecureMR.Color;
 using System.Collections.Concurrent;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
-    public class UFODemo : MonoBehaviour, ISecureMRServiceCleanup
+    public class UFODemo : MonoBehaviour, ISpatialMLServiceCleanup
     {
         [Tooltip("Face detection model (.tflite / LiteRT format).")]
         public TextAsset faceModel;
@@ -220,10 +220,10 @@ namespace PicoXR.SecureMR.Demo
 
         private void OnDestroy()
         {
-            ShutdownSecureMR();
+            ShutdownSpatialML();
         }
 
-        public void ShutdownSecureMR()
+        public void ShutdownSpatialML()
         {
             if (m_isShuttingDown)
             {

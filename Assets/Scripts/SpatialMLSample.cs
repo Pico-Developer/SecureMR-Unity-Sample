@@ -19,9 +19,9 @@ using ByteDance.PICO.SecureMR;
 using UnityEngine;
 using Color = ByteDance.PICO.SecureMR.Color;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
-    public class SecureMRSample : MonoBehaviour, ISecureMRServiceCleanup
+    public class SpatialMLSample : MonoBehaviour, ISpatialMLServiceCleanup
     {
         public TextAsset helmetGltfAsset;
         public int vstWidth = 1024;
@@ -55,10 +55,10 @@ namespace PicoXR.SecureMR.Demo
 
         private void OnDestroy()
         {
-            ShutdownSecureMR();
+            ShutdownSpatialML();
         }
 
-        public void ShutdownSecureMR()
+        public void ShutdownSpatialML()
         {
             if (provider == null)
             {

@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Scenes/SceneLoader.unity
     guid: 8d6136c7f97846feaa44c065c27280aa
   - enabled: 0
-    path: Assets/Scenes/SecureMRSample.unity
+    path: Assets/Scenes/SpatialMLSample.unity
     guid: 2d323328cc3b6473d8308b22e893eea9
   - enabled: 1
     path: Assets/Scenes/MnistwildDemo.unity

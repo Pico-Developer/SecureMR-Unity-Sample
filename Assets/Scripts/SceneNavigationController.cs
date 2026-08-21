@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 using ByteDance.PICO.XR;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
     [DisallowMultipleComponent]
     public sealed class SceneNavigationController : MonoBehaviour
@@ -261,7 +261,7 @@ namespace PicoXR.SecureMR.Demo
             {
                 Debug.Log(
                     $"{k_logTag} Quit requested from {activeScene.name}; " +
-                    "draining SecureMR owner(s) before returning to SceneLoader.");
+                    "draining SpatialML owner(s) before returning to SceneLoader.");
                 m_shouldLoadLoaderAfterResume = false;
                 LoadLoaderScene();
                 return false;
@@ -594,9 +594,9 @@ namespace PicoXR.SecureMR.Demo
             Scene activeScene = SceneManager.GetActiveScene();
             if (!IsLoaderScene(activeScene))
             {
-                int cleanupCount = await ShutdownActiveSecureMRServicesAsync();
+                int cleanupCount = await ShutdownActiveSpatialMLServicesAsync();
                 Debug.Log(
-                    $"{k_logTag} Drained {cleanupCount} SecureMR owner(s) in {activeScene.name}.");
+                    $"{k_logTag} Drained {cleanupCount} SpatialML owner(s) in {activeScene.name}.");
             }
 
             SceneManager.LoadScene(buildIndex, LoadSceneMode.Single);
@@ -612,10 +612,10 @@ namespace PicoXR.SecureMR.Demo
             }
 
             m_shouldLoadLoaderAfterResume = true;
-            int cleanupCount = await ShutdownActiveSecureMRServicesAsync();
+            int cleanupCount = await ShutdownActiveSpatialMLServicesAsync();
             Debug.Log(
                 $"{k_logTag} {lifecycleEvent} outside SceneLoader; " +
-                $"shut down {cleanupCount} SecureMR owner(s).");
+                $"shut down {cleanupCount} SpatialML owner(s).");
 
             if (!m_isApplicationPaused)
             {
@@ -635,13 +635,13 @@ namespace PicoXR.SecureMR.Demo
             LoadLoaderScene();
         }
 
-        private Task<int> ShutdownActiveSecureMRServicesAsync()
+        private Task<int> ShutdownActiveSpatialMLServicesAsync()
         {
-            m_activeCleanupTask ??= ShutdownActiveSecureMRServicesCoreAsync();
+            m_activeCleanupTask ??= ShutdownActiveSpatialMLServicesCoreAsync();
             return m_activeCleanupTask;
         }
 
-        private static Task<int> ShutdownActiveSecureMRServicesCoreAsync()
+        private static Task<int> ShutdownActiveSpatialMLServicesCoreAsync()
         {
             MonoBehaviour[] sceneBehaviours =
                 FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -649,9 +649,9 @@ namespace PicoXR.SecureMR.Demo
 
             for (int i = 0; i < sceneBehaviours.Length; i++)
             {
-                if (sceneBehaviours[i] is ISecureMRServiceCleanup cleanup)
+                if (sceneBehaviours[i] is ISpatialMLServiceCleanup cleanup)
                 {
-                    cleanup.ShutdownSecureMR();
+                    cleanup.ShutdownSpatialML();
                     cleanupCount++;
                 }
             }

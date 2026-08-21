@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 3534233}
   - component: {fileID: 3534234}
   m_Layer: 0
-  m_Name: SecureMRSample
+  m_Name: SpatialMLSample
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

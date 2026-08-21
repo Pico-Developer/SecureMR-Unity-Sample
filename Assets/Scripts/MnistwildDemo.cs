@@ -5,7 +5,7 @@ using ByteDance.PICO.SecureMR;
 using UnityEngine;
 using Color = ByteDance.PICO.SecureMR.Color;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
     public class MnistwildDemo : MonoBehaviour
     {
@@ -104,7 +104,7 @@ namespace PicoXR.SecureMR.Demo
             var modelOp = pipelineParam.CreateOperator<RunModelInferenceOperator>(modelConfig);
 
             // Keep post-processing outside the TFLite graph, following UFODemo's LiteRT pattern.
-            // The TFLite model emits the 10-class score vector; SecureMR operators select the
+            // The TFLite model emits the 10-class score vector; SpatialML operators select the
             // winning class and score so the LiteRT model stays accelerator-friendly.
             var scores = pipelineParam.CreateTensor<float, Scalar>(1, new TensorShape(new[] { 10 }));
             var sortedScores = pipelineParam.CreateTensor<float, Scalar>(1, new TensorShape(new[] { 10 }));

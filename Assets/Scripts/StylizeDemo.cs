@@ -5,9 +5,9 @@ using ByteDance.PICO.SecureMR;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
-    public class StylizeDemo : MonoBehaviour, ISecureMRServiceCleanup
+    public class StylizeDemo : MonoBehaviour, ISpatialMLServiceCleanup
     {
         [Header("Assets")]
         public TextAsset portalGltfAsset;
@@ -149,7 +149,7 @@ namespace PicoXR.SecureMR.Demo
         private void OnDestroy()
         {
             DisableInputActions();
-            ShutdownSecureMR();
+            ShutdownSpatialML();
         }
 
         private void OnEnable()
@@ -178,7 +178,7 @@ namespace PicoXR.SecureMR.Demo
             AdvanceStyle(1);
         }
 
-        public void ShutdownSecureMR()
+        public void ShutdownSpatialML()
         {
             if (m_isShuttingDown)
             {

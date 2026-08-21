@@ -3066,7 +3066,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7fa01d19a6d84dbf9c365ab6b2df4691, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PicoXR.SecureMR.Demo.SceneNavigationController
+  m_EditorClassIdentifier: Assembly-CSharp::PicoXR.SpatialML.Demo.SceneNavigationController
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

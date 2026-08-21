@@ -273,7 +273,7 @@ PlayerSettings:
   AndroidAllowedArchitectures: -1
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
-  AndroidKeystoreName: /Users/bytedance/Documents/Projects/Keystore/securemrkeystore.keystore
+  AndroidKeystoreName: 
   AndroidKeyaliasName: key1
   AndroidEnableArmv9SecurityFeatures: 0
   AndroidEnableArm64MTE: 0
@@ -853,14 +853,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: SecureMRSDKTest
+  metroPackageName: SpatialMLUnitySamples
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: SecureMRSDKTest
+  metroApplicationDescription: SpatialML Unity Samples
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0

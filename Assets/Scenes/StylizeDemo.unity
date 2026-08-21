@@ -202,7 +202,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bec91fb5edeac42fda59dc48ee3a78db, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PicoXR.SecureMR.Demo.StylizeDemo
+  m_EditorClassIdentifier: Assembly-CSharp::PicoXR.SpatialML.Demo.StylizeDemo
   portalGltfAsset: {fileID: 4900000, guid: 894e26fa08f234b6caeb6cd82e8ad6aa, type: 3}
   stylePredictorModel: {fileID: 4900000, guid: 1353d67910d9e4ff0835a9628da4e4ed, type: 3}
   styleTransferModel: {fileID: 4900000, guid: ead57d06c50ce46c882a6a78109e9ad3, type: 3}
