@@ -1,0 +1,39 @@
+{
+    "model_id": "mnist_wild",
+    "model_name": "MNIST-Wild-Digit-Classifier",
+    "runtime": "tflite",
+    "precision": "float",
+    "tool_versions": {
+        "litert": "1.4.3"
+    },
+    "model_files": {
+        "mnist.tflite": {
+            "inputs": {
+                "input": {
+                    "shape": [
+                        1,
+                        224,
+                        224,
+                        1
+                    ],
+                    "dtype": "float32",
+                    "io_type": "image",
+                    "image_metadata": {},
+                    "value_range": [
+                        0.0,
+                        1.0
+                    ]
+                }
+            },
+            "outputs": {
+                "scores": {
+                    "shape": [
+                        1,
+                        10
+                    ],
+                    "dtype": "float32"
+                }
+            }
+        }
+    }
+}

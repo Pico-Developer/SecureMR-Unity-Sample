@@ -1,0 +1,100 @@
+{
+    "model_id": "mediapipe_face",
+    "model_name": "MediaPipe-Face-Detection",
+    "runtime": "tflite",
+    "precision": "float",
+    "tool_versions": {
+        "qairt": "2.45.0.260326154327",
+        "litert": "1.4.3"
+    },
+    "model_files": {
+        "face_detector.tflite": {
+            "inputs": {
+                "image": {
+                    "shape": [
+                        1,
+                        256,
+                        256,
+                        3
+                    ],
+                    "dtype": "float32",
+                    "io_type": "image",
+                    "image_metadata": {},
+                    "value_range": [
+                        0.0,
+                        1.0
+                    ]
+                }
+            },
+            "outputs": {
+                "box_coords_1": {
+                    "shape": [
+                        1,
+                        512,
+                        16
+                    ],
+                    "dtype": "float32"
+                },
+                "box_coords_2": {
+                    "shape": [
+                        1,
+                        384,
+                        16
+                    ],
+                    "dtype": "float32"
+                },
+                "box_scores_1": {
+                    "shape": [
+                        1,
+                        512,
+                        1
+                    ],
+                    "dtype": "float32"
+                },
+                "box_scores_2": {
+                    "shape": [
+                        1,
+                        384,
+                        1
+                    ],
+                    "dtype": "float32"
+                }
+            }
+        },
+        "face_landmark_detector.tflite": {
+            "inputs": {
+                "image": {
+                    "shape": [
+                        1,
+                        192,
+                        192,
+                        3
+                    ],
+                    "dtype": "float32",
+                    "io_type": "image",
+                    "image_metadata": {},
+                    "value_range": [
+                        0.0,
+                        1.0
+                    ]
+                }
+            },
+            "outputs": {
+                "scores": {
+                    "shape": [
+                        1
+                    ],
+                    "dtype": "float32"
+                },
+                "landmarks": {
+                    "shape": [
+                        1,
+                        468,
+                        3
+                    ],
+                    "dtype": "float32"
+                }
+            }
+        }
+    }
+}

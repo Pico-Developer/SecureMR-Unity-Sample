@@ -13,13 +13,13 @@
 // limitations under the License.
 
 using System;
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
-    public class MinimalApp : MonoBehaviour
+    public class MinimalApp : MonoBehaviour, ISpatialMLServiceCleanup
     {
         public TextAsset helmetGltfAsset;
         public int vstWidth = 1024;
@@ -43,7 +43,29 @@ namespace PicoXR.SecureMR.Demo
 
         private void Update()
         {
+            if (provider == null)
+            {
+                return;
+            }
+
             RunPipeline();
+        }
+
+        private void OnDestroy()
+        {
+            ShutdownSpatialML();
+        }
+
+        public void ShutdownSpatialML()
+        {
+            if (provider == null)
+            {
+                return;
+            }
+
+            Provider providerToDestroy = provider;
+            provider = null;
+            providerToDestroy.Destroy();
         }
 
         private void CreateProvider()

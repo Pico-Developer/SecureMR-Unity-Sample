@@ -12,19 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
-using Color = Unity.XR.PXR.SecureMR.Color;
+using Color = ByteDance.PICO.SecureMR.Color;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
-    public class ColorPicker : MonoBehaviour
+    public class ColorPicker : MonoBehaviour, ISpatialMLServiceCleanup
     {
         public TextAsset cubeGltfAsset;
         public Transform cubePosition;
         public float pickColorEveryXSeconds = 0.033f;
-  
+
+        // Distance to push the cube along the controller's forward axis so it
+        // appears past the end of the controller and does not overlap with it.
+        [Tooltip("Distance (meters) to offset the cube along the controller's forward axis so it appears past the controller tip.")]
+        public float cubeForwardOffset = 0.15f;
+
+        // Rendering camera used to project the cube's world position into VST UV space.
+        // Falls back to Camera.main if not assigned.
+        [Tooltip("Camera used to approximate the VST left-eye view for UV projection. Defaults to Camera.main.")]
+        public Camera projectionCamera;
+
         private Provider provider;
         private Pipeline pipeline;
         private Pipeline rendererPipeline;
@@ -40,8 +50,11 @@ namespace PicoXR.SecureMR.Demo
         public Tensor poseMatPlaceholder;
 
         public Tensor pickedColorPlaceholder;
-        
-        
+
+        // Slice tensors for per-frame UV sampling
+        private Tensor sliceGlobal;
+        private Tensor slicePlaceholder;
+
         // GLTF tensors
         private Tensor gltfTensor;
         private Tensor gltfPlaceholder;
@@ -53,11 +66,28 @@ namespace PicoXR.SecureMR.Demo
         }
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
+        private void Start()
         {
             CreateProvider();
             CreatePipeline();
             CreateRenderer();
+        }
+
+        private void OnDestroy()
+        {
+            ShutdownSpatialML();
+        }
+
+        public void ShutdownSpatialML()
+        {
+            if (provider == null)
+            {
+                return;
+            }
+
+            Provider providerToDestroy = provider;
+            provider = null;
+            providerToDestroy.Destroy();
         }
 
         private void CreateProvider()
@@ -86,7 +116,13 @@ namespace PicoXR.SecureMR.Demo
                     0.0f, 0.0f, 0.0f, 1.0f
                 });
 
-
+            // Slice global describing the (x_start, x_end, y_start, y_end) pixel window
+            // sampled from the rectified VST image. Updated each frame from the cube's
+            // projected screen position so the picked color is the color *behind* the cube.
+            int initX = vstWidth / 2;
+            int initY = vstHeight / 2;
+            sliceGlobal = provider.CreateTensor<int, Slice>(2, new TensorShape(new[] { 2 }),
+                new int[] { initX, initX + 1, initY, initY + 1 });
         }
         
         private void CreateRenderer()
@@ -148,17 +184,11 @@ namespace PicoXR.SecureMR.Demo
             
 
             var rawRgb = readerPipeline.CreateTensor<byte, Matrix>(3, new TensorShape(new[] { vstHeight, vstWidth }));
-            
-            // use controller position to get picked color
-            var mat = cubePosition.localToWorldMatrix;
 
-            Vector3 controllerForward = new Vector3(mat.m02, mat.m12, mat.m22).normalized;
-            
-            int controllerX = Mathf.Clamp((int)((controllerForward.x + 1) * 0.5f * vstWidth), 0, vstWidth-2);
-            int controllerY = Mathf.Clamp((int)((controllerForward.y + 1) * 0.5f * vstHeight), 0, vstHeight-2);
-            
-            var slice = readerPipeline.CreateTensor<int, Slice>(2, new TensorShape(new[] { 2 }),
-            new int[] { controllerX, controllerX + 1, controllerY, controllerY + 1 });
+            // Slice placeholder - the actual sampling window is provided each frame
+            // by binding sliceGlobal (which is reset based on the cube's projected UV).
+            slicePlaceholder = readerPipeline.CreateTensorReference<int, Slice>(2, new TensorShape(new[] { 2 }));
+
             var pickedColor = readerPipeline.CreateTensor<byte, Matrix>(3, new TensorShape(new[] { 1, 1 }));
             
             var pickedColorA = readerPipeline.CreateTensor<byte, Matrix>(4, new TensorShape(new[] { 1, 1 }));
@@ -170,7 +200,7 @@ namespace PicoXR.SecureMR.Demo
             vstOp.SetResult("left image", rawRgb);
 
             assignmentOperator2.SetOperand("src", rawRgb);
-            assignmentOperator2.SetOperand("src slices", slice);
+            assignmentOperator2.SetOperand("src slices", slicePlaceholder);
             assignmentOperator2.SetResult("dst", pickedColor);
 
             rgbToRgbaOp.SetOperand("src", pickedColor);
@@ -186,11 +216,26 @@ namespace PicoXR.SecureMR.Demo
             assignmentOperator3.SetResult("dst", pickedColorPlaceholder);
         }
 
-        private void UpdatePoseMatGlobal()
+        // Builds a Matrix4x4 representing the cube's world pose, offset along the
+        // controller's forward axis by cubeForwardOffset so the cube renders past the
+        // controller tip and does not overlap with the physical controller.
+        private Matrix4x4 GetOffsetCubeMatrix()
         {
             var mat = cubePosition.localToWorldMatrix;
+            // Column 2 of a TRS matrix is the local +Z (forward) axis in world space.
+            Vector3 forward = new Vector3(mat.m02, mat.m12, mat.m22);
+            Vector3 offset = forward * cubeForwardOffset;
+            mat.m03 += offset.x;
+            mat.m13 += offset.y;
+            mat.m23 += offset.z;
+            return mat;
+        }
+
+        private void UpdatePoseMatGlobal()
+        {
+            var mat = GetOffsetCubeMatrix();
             //rotations still seem reversed on y axis
-            
+
             poseMatGlobal.Reset(new[]
             {
                 mat.m00, mat.m01, mat.m02, mat.m03 ,
@@ -198,6 +243,34 @@ namespace PicoXR.SecureMR.Demo
                 -mat.m20, -mat.m21, -mat.m22, -mat.m23,
                 mat.m30, mat.m31, mat.m32, mat.m33,
             });
+        }
+
+        // Projects the cube's offset world position into VST left-image UV pixel
+        // coordinates, then resets sliceGlobal so the reader pipeline samples the
+        // pixel directly behind the cube. Falls back to the image center if the
+        // cube is behind the camera or off-screen.
+        private void UpdateSliceGlobal()
+        {
+            Camera cam = projectionCamera != null ? projectionCamera : Camera.main;
+            if (cam == null)
+            {
+                return;
+            }
+
+            Vector3 worldPos = GetOffsetCubeMatrix().GetColumn(3);
+            Vector3 viewport = cam.WorldToViewportPoint(worldPos);
+
+            // Behind camera - keep previous slice rather than sampling garbage.
+            if (viewport.z <= 0f)
+            {
+                return;
+            }
+
+            // VST image origin is top-left, Unity viewport origin is bottom-left.
+            int x = Mathf.Clamp((int)(viewport.x * vstWidth), 0, vstWidth - 2);
+            int y = Mathf.Clamp((int)((1f - viewport.y) * vstHeight), 0, vstHeight - 2);
+
+            sliceGlobal.Reset(new int[] { x, x + 1, y, y + 1 });
         }
                 
         private ulong RenderFrame()
@@ -216,19 +289,23 @@ namespace PicoXR.SecureMR.Demo
 
         private void PickColor(ulong pipelineRun)
         {
-            // colorGlobal.Reset(new float[] { Random.value, Random.value, Random.value, 1.0f }); 
- 
-            var tensorMapping = new TensorMapping();
-            tensorMapping.Set(pickedColorPlaceholder, colorGlobal);
- 
-            readerPipeline.ExecuteAfter(pipelineRun, tensorMapping);
-            
+            UpdateSliceGlobal();
 
+            var tensorMapping = new TensorMapping();
+            tensorMapping.Set(slicePlaceholder, sliceGlobal);
+            tensorMapping.Set(pickedColorPlaceholder, colorGlobal);
+
+            readerPipeline.ExecuteAfter(pipelineRun, tensorMapping);
         }
         
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
+            if (provider == null)
+            {
+                return;
+            }
+
             var pipelineRun = RenderFrame();
             elapsed += Time.deltaTime;
             if (elapsed > pickColorEveryXSeconds)
@@ -238,5 +315,6 @@ namespace PicoXR.SecureMR.Demo
             }
             
         }
+
     }
 }

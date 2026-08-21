@@ -1,18 +1,25 @@
 using System;
 using System.Text;
-using Unity.XR.PXR;
-using Unity.XR.PXR.SecureMR;
+using ByteDance.PICO.XR;
+using ByteDance.PICO.SecureMR;
 using UnityEngine;
-using Color = Unity.XR.PXR.SecureMR.Color;
+using Color = ByteDance.PICO.SecureMR.Color;
 
-namespace PicoXR.SecureMR.Demo
+namespace PicoXR.SpatialML.Demo
 {
     public class MnistwildDemo : MonoBehaviour
     {
+        [Tooltip("MNIST classification model (.tflite / LiteRT format).")]
         public TextAsset mnistModel;
         public TextAsset tvGltfAsset;
         public int numFramesToRun = -1;
         public float intervalBetweenPipelineRuns = 0.033f;
+
+        [Tooltip("Inference target for the LiteRT model (NPU / GPU / CPU).")]
+        public SecureMRModelTarget modelTarget = SecureMRModelTarget.Npu;
+
+        [Tooltip("Number of CPU threads used when modelTarget is CPU. Ignored otherwise. 0 = runtime default.")]
+        public int cpuTargetNumThreads = 0;
         private int vstWidth = 3248;
         private int vstHeight = 2464;
         private int cropWidth = 224;
@@ -86,16 +93,42 @@ namespace PicoXR.SecureMR.Demo
         private void CreateMnistModel(Pipeline pipelineParam, Tensor inputTensor, Tensor predClass,
             Tensor predScore)
         {
-            // Create MNIST model operator
-            var modelConfig = new ModelOperatorConfiguration(mnistModel.bytes, SecureMRModelType.QnnContextBinary, "mnist");
-            modelConfig.AddInputMapping("input_1", "input_1", SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping("_538", "_538", SecureMRModelEncoding.Float32);
-            modelConfig.AddOutputMapping("_539", "_539", SecureMRModelEncoding.Int32);
+            // Create MNIST model operator.
+            // LiteRT (TFLite) configuration replaces the previous QNN context-binary path.
+            var liteRtConfig = new LiteRtModelConfiguration(modelTarget, cpuTargetNumThreads);
+            var modelConfig = new ModelOperatorConfiguration(
+                mnistModel.bytes,
+                SecureMRModelType.LiteRtModel,
+                "mnist",
+                liteRtConfig);
             var modelOp = pipelineParam.CreateOperator<RunModelInferenceOperator>(modelConfig);
 
-            modelOp.SetOperand("input_1", inputTensor);
-            modelOp.SetResult("_538", predScore);
-            modelOp.SetResult("_539", predClass);
+            // Keep post-processing outside the TFLite graph, following UFODemo's LiteRT pattern.
+            // The TFLite model emits the 10-class score vector; SpatialML operators select the
+            // winning class and score so the LiteRT model stays accelerator-friendly.
+            var scores = pipelineParam.CreateTensor<float, Scalar>(1, new TensorShape(new[] { 10 }));
+            var sortedScores = pipelineParam.CreateTensor<float, Scalar>(1, new TensorShape(new[] { 10 }));
+            var scoreIndices = pipelineParam.CreateTensor<int, Scalar>(1, new TensorShape(new[] { 10 }));
+            var firstElementSlice = pipelineParam.CreateTensor<int, Slice>(2, new TensorShape(new[] { 1 }), new[] { 0, 1 });
+
+            var sortScoresOp = pipelineParam.CreateOperator<SortVectorOperator>();
+            var copyBestScoreOp = pipelineParam.CreateOperator<AssignmentOperator>();
+            var copyBestClassOp = pipelineParam.CreateOperator<AssignmentOperator>();
+
+            modelOp.SetOperand("input", inputTensor);
+            modelOp.SetResult("scores", scores);
+
+            sortScoresOp.SetOperand("input", scores);
+            sortScoresOp.SetResult("sorted", sortedScores);
+            sortScoresOp.SetResult("indices", scoreIndices);
+
+            copyBestScoreOp.SetOperand("src", sortedScores);
+            copyBestScoreOp.SetOperand("src slices", firstElementSlice);
+            copyBestScoreOp.SetResult("dst", predScore);
+
+            copyBestClassOp.SetOperand("src", scoreIndices);
+            copyBestClassOp.SetOperand("src slices", firstElementSlice);
+            copyBestClassOp.SetResult("dst", predClass);
         }
 
         private void CreatePipeline()
